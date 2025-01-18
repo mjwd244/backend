@@ -1,0 +1,9 @@
+setfilteredUsersIds(specificGroup.userIds
+              .filter(user => user.id !== mainUserId)
+              .map(user => user));
+            console.log(Array.isArray(specificGroup.createdBy)); // Log the type of data for createdBy
+            console.log(Array.isArray(specificGroup.userIds)); // Log the type of data for userIds
+ 
+            if (specificGroup.createdBy.id !== mainUserId) {
+             
+              setfilteredUsersIds(prevFilteredUserIds => [...prevFilteredUserIds, specificGroup.createdBy]);

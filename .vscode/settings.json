@@ -1,0 +1,55 @@
+{
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.background": "#000000"
+      },
+      "editor.tokenColorCustomizations": {
+        "textMateRules": [
+          {"scope": ["comment.line.number-sign.python", "comment.line.double-slash.js"], "settings": {"foreground": "#808080"}},
+          {"scope": ["storage.type.function.python", "keyword.control.flow.python", "keyword.control.import.python"], "settings": {"foreground": "#0098CF"}},
+          {"scope": ["entity.name.function.python", "support.type.property-name.json"], "settings": {"foreground": "#EC3479"}},
+          {"scope": ["variable.parameter.function.language.python", "entity.name.namespace", "variable.other.property", "parameter"], "settings": {"foreground": "#FFFFFF"}},
+          {"scope": ["constant.numeric"], "settings": {"foreground": "#E43375"}},
+          {"scope": ["support.function.builtin.python"], "settings": {"foreground": "#F5922F"}},
+          {"scope": ["string.quoted.docstring.multi.python", "string.quoted.single.python", "string.quoted.double.json.comments"], "settings": {"foreground": "#00A37E"}}
+        ]
+      },
+      "editor.semanticTokenColorCustomizations": {
+        "enabled": true,
+        "rules": {
+          "function": "#FFFFFF",
+          "function.builtin": "#F5922F",
+          "function.declaration": "#EC3479",
+          "parameter": "#FFFFFF",
+          "parameter.declaration": "#FFFFFF",
+          "variable": "#FFFFFF",
+          "class": "#F5922F"
+        }
+      },
+      "workbench.colorCustomizations": {
+        "notebook.cellEditorBackground": "#000000",
+        "notebook.focusedCellBackground": "#1F1F1F",
+        "editor.background": "#202123",     // ChatGPT-like dark background
+        "editor.foreground": "#dcdcdc",     // Light gray text
+        "editorCursor.foreground": "#00FF9C", // Greenish cursor color
+        "editor.tokenColorCustomizations": {
+          "textMateRules": [
+            {
+              "scope": "meta.tag",
+              "settings": {
+                "foreground": "#FF0000" // Change HTML tag color to red
+              }
+            }
+          ]
+        },
+        "activityBar.background": "#333333", // Dark sidebar background
+        "sideBar.background": "#333333",     // Sidebar background
+        "statusBar.background": "#202123",   // Dark status bar background
+        "titleBar.activeBackground": "#202123",  // Dark title bar background
+        "tab.activeBackground": "#202123",    // Dark active tab background
+        "terminal.background": "#202123",     // Dark terminal background
+        "terminal.foreground": "#dcdcdc"      // Light gray terminal text
+      },
+      "CodeGPT.apiKey": "CodeGPT Plus Beta"
+    
+}

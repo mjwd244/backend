@@ -1,0 +1,242 @@
+import React, { useState,useEffect } from "react";
+import Cam from "../img/cam.png";
+import Add from "../img/add.png";
+import More from "../img/more.png";
+import Delete from "../img/delete.jpg";
+import Messages from "./Messages";
+import Input from "./Input";
+import AddFriend from "./AddFriend";
+import { useChat, useUser } from './UserContext';
+import GroupChat from "./GroupChat"; // Imhttps://2880-2a02-8071-5e71-4260-9483-261e-688b-bc2b.ngrok-free.app/friendsport GroupChat component
+import { createConversation } from '../pages/UserDetails';
+
+const Chat = ({ onSearchChat, toggleBlackOverlay, isGroupChat ,setIsGroupChat }) => {
+  const { showAddFriend, setShowAddFriend } = useChat();
+  const [inputValue, setInputValue] = useState('');
+  const { friend, actuallmessagesId, mainuser, message, setMessage, selectedUser,setActuallMessageId, groupId ,rerender,setRerender} = useUser();
+  const messageClasses = {
+    message: 'message',
+    messageInfo: 'messageInfo',
+    messageContent: 'messageContent',
+    wholecontainer: 'messages'
+  };
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [buttonLabel, setButtonLabel] = useState('');
+  const [triggersend, setTriggersend] = useState(false);
+
+
+
+ 
+  
+  useEffect(() => {
+    console.log('isGroupChat changed:', isGroupChat);
+  }, [isGroupChat]);
+
+  const handleSearchS = (searchTerm) => {
+    onSearchChat(searchTerm);
+  };
+
+  // here as i remember i tansforme the conversation from userdetails to here to chat 
+  const triggeeringsendingMessage = (message, fileURL) => {
+    setTriggersend(!triggersend);
+    sendMessage(message, fileURL);
+  };
+
+  useEffect(() => {
+    console.log("creating conversation ...")
+    const createConversationIfNeeded = async () => {
+      if (selectedUser.length === 0 || !selectedUser[0].id) {
+        console.log("No selected user found, skipping conversation creation.");
+        return;
+      }
+  
+      if (actuallmessagesId ===null) {
+        console.log("No conversation ID found, attempting to create a new conversation...");
+        try {
+          const newConversation = await createConversation(mainuser, selectedUser[0].id);
+          console.log("New conversation data:", newConversation);
+  
+          if (newConversation && newConversation.conversation) {
+         
+            setActuallMessageId(newConversation.conversation._id);
+            console.log("New actuallmessagesId set:", newConversation.conversation._id);
+            console.log(actuallmessagesId)
+          } else {
+            console.error("Failed to create a new conversation.");
+          }
+        } catch (error) {
+          console.error("Error creating conversation:", error.message);
+        }
+      }
+    };
+  
+    selectedUser.length > 0 ? createConversationIfNeeded() : null;
+  }, [actuallmessagesId,triggersend]);
+  
+  useEffect(() => {
+    console.log("sending messesage ... ")
+    const sendMessage = async () => {
+      if (actuallmessagesId && inputValue.trim() !== '') {
+        try {
+          const response = await fetch('http://localhost:5000/api/auth/send-message', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              conversationId: actuallmessagesId,
+              text: inputValue,
+              sender: mainuser[0].userId,
+            }),
+          });
+  
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Error response data:", errorData);
+            throw new Error(errorData.error || 'Error sending message');
+          }
+  
+          const newMessage = await response.json();
+          setMessage([...message, { ...newMessage, source: 'chat' }]);
+          setInputValue('');
+        } catch (error) {
+          console.error('Error sending message:', error.message);
+        }
+      }
+    };
+  
+    if (actuallmessagesId && triggersend) {
+      sendMessage();
+    }
+  }, [actuallmessagesId, triggersend]);
+
+
+  useEffect(()=> {
+
+   console.log("actuallmessagesId",actuallmessagesId);
+   console.log("selectedUser",selectedUser);
+  },[actuallmessagesId,selectedUser])
+
+  const highlightFriendsForDeletion = () => {
+    const usersToHighlight = friend.map((friendItem) => friendItem.friendId);
+    toggleBlackOverlay(usersToHighlight);
+  };
+
+  const toggleGroupOptionsDropdown  = () =>{
+    setShowDropdown((prev) => !prev);
+  }
+  const updateGroupActionLabel  = async () => {
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/auth/groups/state/${mainuser[0].userId}/${groupId}`, {
+
+        headers : {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if(response.ok){
+        setButtonLabel("delete group")
+      }
+      if(!response.ok){
+        setButtonLabel("leave group")
+      }
+
+  }
+  catch(error){
+    console.error('Error checking user state :', error);
+  }
+  };
+
+  useEffect(() => {
+    if (showDropdown) {
+      updateGroupActionLabel();
+    }
+  }, [showDropdown]);
+  
+ const handleGroupDeletionOrExit  = async () =>{
+  if(buttonLabel== "delete group"){
+    try{
+      const response = await fetch(`http://localhost:5000/api/auth/groups/${groupId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if(response.ok){
+        console.log('Group deleted successfully');
+        setRerender((prev) => prev + 1);
+      }
+      else{
+        console.error('Failed to delete group');
+      }
+    }
+    catch{
+      console.error('Error deleting group:', error);
+    }
+  }
+  else{
+    try{
+      console.log('User ID:', mainuser[0].userId);
+      console.log('Group ID:', groupId);
+      const response = await fetch(`http://localhost:5000/api/auth/groups/userRemovel/${mainuser[0].userId}/${groupId}`, {
+
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if(response.ok){
+        console.log('user was removed');
+        setRerender((prev) => prev + 1);
+      }
+      else{
+        console.error('user wasnt removed successfully');
+      }
+    }
+      catch{
+        console.error('Error deleting user:', error);
+      }
+    }
+  }
+ 
+
+  return (
+    <>
+      <div className="chat">
+        <div className="chatInfo">
+          <div className="chatIcons">
+            <img src={Cam} alt="" />
+            <img src={Add} alt="" onClick={() => { setShowAddFriend(true); setIsGroupChat(false); }} /> 
+            <div className="more-icon-wrapper">
+              <img src={More} alt="" onClick={toggleGroupOptionsDropdown}  />
+                {showDropdown && (
+                  <div className="dropdown-menu">
+                    <button onClick={handleGroupDeletionOrExit}>{buttonLabel}</button>
+                  </div>
+                )}
+            </div>
+            <img src={Delete} alt="" onClick={highlightFriendsForDeletion} />
+          </div>
+        </div>
+        {isGroupChat ? (
+          <GroupChat setIsGroupChat={setIsGroupChat} />
+        ) : (
+          <>
+            <Messages message={message} friendObject={selectedUser} messageClasses={messageClasses} componentType={"chat"}/>
+            <Input
+              inputValue={inputValue}
+              setInputValue={setInputValue}
+              onSend={triggeeringsendingMessage}
+            />
+            {showAddFriend && <AddFriend onSearchAdd={handleSearchS} />}
+          </>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default Chat;
+
