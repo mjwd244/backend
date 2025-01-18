@@ -1,5 +1,6 @@
-node_modules/
 echo "node_modules/
 .env
 .DS_Store
-*.log" > .gitignore
+*.log
+dist/
+coverage/" > .gitignore
