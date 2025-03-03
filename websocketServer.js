@@ -3,10 +3,11 @@ const { Server } = require("socket.io");
 const User = require('./models/User');
 const Conversation = require('./models/Conversation'); // Add this import
 
+const userSocketMap = new Map(); 
 function initializeWebSocketServer(server) {
   const io = new Server(server, {
     cors: {
-      origin: ["https://3643-2a02-8071-5e71-4260-a1a0-2a27-125d-1116.ngrok-free.app"],
+      origin: ["https://42bc-2a02-8071-5e71-4260-5424-44f9-e366-60c.ngrok-free.app"],
       methods: ["GET", "POST"]
     }
   });
@@ -16,7 +17,7 @@ function initializeWebSocketServer(server) {
 
     socket.emit('currentOnlineUsers', onlineUsers);
 
-    socket.on('sendMessage', async (messageData,receiverId) => {
+    socket.on('sendMessage', async (messageData) => {
       try {
           const {
               conversationId,
@@ -25,6 +26,8 @@ function initializeWebSocketServer(server) {
               sender,
               timestamp,
               status,
+              receiverId,
+              encrypted
           } = messageData;
   
           const conversation = await Conversation.findById(conversationId);
@@ -39,13 +42,27 @@ function initializeWebSocketServer(server) {
               text,
               fileURL,
               timestamp,
-              status
+              status,
+              encrypted
           };
       
           conversation.messages.push(newMessage);
           await conversation.save();
-          
-          
+
+          const receiverSocketId = userSocketMap.get(receiverId);
+        
+          if (receiverSocketId) {
+              io.to(receiverSocketId).emit('receiveMessage', {
+                  ...newMessage,
+                  conversationId
+              });
+          }
+
+          io.emit('newUnreadMessage', {
+            senderId: messageData.sender,
+            receiverId: messageData.receiverId
+        });
+        
       } catch (error) {
           console.error('Error sending message:', error);
           socket.emit('error', { message: 'Failed to send message' });
@@ -53,9 +70,60 @@ function initializeWebSocketServer(server) {
   });
 
 
+  socket.on('updateMessageStatus', async ({ conversationId, timestamp, sender, newStatus }) => {
+    try {
+        await Conversation.findOneAndUpdate(
+            { '_id': conversationId },
+            {
+                '$set': {
+                    'messages.$[msg].status': newStatus
+                }
+            },
+            {
+                arrayFilters: [{ 
+                    'msg.timestamp': timestamp,
+                    'msg.sender': sender 
+                }],
+                new: true
+            }
+        );
+    } catch (error) {
+        console.log('Error updating message status:', error);
+    }
+});
+
+socket.on('messageRead', async ({ messageId, conversationId, readerId,senderId  }) => {
+  try {
+      await Conversation.findOneAndUpdate(
+          { '_id': conversationId },
+          {
+              '$set': {
+                  'messages.$[msg].status': 'seen'
+              }
+          },
+          {
+              arrayFilters: [{ 'msg._id': messageId }],
+              new: true
+          }
+      );
+      const senderSocketId = userSocketMap.get(senderId);
+      if (senderSocketId) {
+          io.to(senderSocketId).emit('messageStatusUpdated', {
+              messageId,
+              status: 'seen'
+          });
+      }
+
+  
+  } catch (error) {
+      console.log('Error updating read status:', error);
+  }
+});
+
+
     socket.on('userOnline', async (userId) => {
       console.log(`User ${userId} is online with socket ID ${socket.id}`);
-      onlineUsers[userId] = socket.id;
+      userSocketMap.set(userId, socket.id);
 
       // Update user's online status
       const userUpdateResult = await User.findByIdAndUpdate(userId, {
@@ -70,7 +138,12 @@ function initializeWebSocketServer(server) {
       );
       console.log(`Updated friends' status for user ${userId}:`, friendsUpdateResult);
 
-      io.emit('updateUserStatus', { userId, isOnline: true });
+      io.emit('updateUserStatus', { 
+        userId, 
+        isOnline: true,
+        socketId: socket.id 
+    });
+
     });
 
  socket.on('changeStatus', async ({ userId, status }) => {
@@ -108,28 +181,47 @@ function initializeWebSocketServer(server) {
       }
     });
 
-    socket.on('disconnect', async () => {
-      const userId = Object.keys(onlineUsers).find(key => onlineUsers[key] === socket.id);
-      if (userId) {
-        console.log(`User ${userId} disconnected`);
-        delete onlineUsers[userId];
-        io.emit('updateUserStatus', { userId, isOnline: false });
+socket.on('disconnect', async () => {
+    // Find userId using Map instead of object
+    let disconnectedUserId = null;
+    for (const [userId, socketId] of userSocketMap.entries()) {
+        if (socketId === socket.id) {
+            disconnectedUserId = userId;
+            break;
+        }
+    }
 
-        // Update user's offline status with the current date
-        const userUpdateResult = await User.findByIdAndUpdate(userId, {
-          status: new Date()
+    if (disconnectedUserId) {
+        console.log(`User ${disconnectedUserId} disconnected`);
+        
+        // Remove from Map
+        userSocketMap.delete(disconnectedUserId);
+
+        // Update user's offline status with timestamp
+        const userUpdateResult = await User.findByIdAndUpdate(disconnectedUserId, {
+            status: new Date()
         });
-        console.log(`Updated user ${userId} status to offline:`, userUpdateResult);
 
         // Update status in friends' lists
         const friendsUpdateResult = await User.updateMany(
-          { 'friends.friendId': userId },
-          { $set: { 'friends.$.status': new Date() } }
+            { 'friends.friendId': disconnectedUserId },
+            { $set: { 'friends.$.status': new Date() } }
         );
-        console.log(`Updated friends' status for user ${userId}:`, friendsUpdateResult);
-      }
-      console.log('A user disconnected:', socket.id);
-    });
+
+        // Broadcast status update
+        io.emit('updateUserStatus', { 
+            userId: disconnectedUserId, 
+            isOnline: false 
+        });
+
+        console.log('Updated offline status:', {
+            user: userUpdateResult,
+            friends: friendsUpdateResult
+        });
+    }
+
+    console.log('Socket disconnected:', socket.id);
+});
 
   socket.on('deleteMessage', async ({ conversationId, messageId, type, userId }) => {
     console.log('Delete request received:', { conversationId, messageId, type, userId });

@@ -14,7 +14,7 @@ const getUserById = async (req, res) => {
 };
 
 const addFriend = async (req, res) => {
-  const { friendId, friendName, photo } = req.body;
+  const { friendId, friendName, photo,publicKey } = req.body;
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -33,12 +33,28 @@ const addFriend = async (req, res) => {
 
     console.log(`Adding friend: { friendId: ${friendObjectId}, friendName: ${friendName}, photo: ${photo} }`);
 
-    user.friends.push({ friendId: friendObjectId, friendName, photo, createdAt: new Date() });
+    user.friends.push({ friendId: friendObjectId, friendName, photo, publicKey  , createdAt: new Date() });
     await user.save();
 
     res.json({ success: true });
   } catch (error) {
     console.error('Error in addFriend:', error);
+    res.status(500).send('Server error');
+  }
+};
+
+const updateUserPublicKey = async (req, res) => {
+  const { userId, publicKey } = req.body;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+    user.publicKey = publicKey;
+    await user.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating public key:', error);
     res.status(500).send('Server error');
   }
 };
@@ -64,5 +80,6 @@ const searchUsers = async (req, res) => {
     getUserById,
     searchUsers,
     addFriend,
+    updateUserPublicKey
   };
 

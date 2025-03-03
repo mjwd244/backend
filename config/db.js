@@ -16,7 +16,7 @@ const connectDB = async () => {
 
   try {
     await mongoose.connect(process.env.MONGO_URI, {
-      socketTimeoutMS: 2147483647, // Set to a very high value (maximum 32-bit signed integer)
+      socketTimeoutMS: 60000, // Adjust timeout for testing
     });
   } catch (err) {
     console.error(err.message);

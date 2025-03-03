@@ -32,9 +32,13 @@ const messageSchema = new mongoose.Schema({
   readBy: [{ type: String }],
   status: {
     type: String,
-    enum: ['sent', 'delivered', 'read'],
+    enum: ['sent', 'delivered', 'seen'],
     default: 'sent'
-  }
+  },
+  encrypted: {
+    type: Boolean,
+    default: false
+}
 });
 
 const conversationSchema = new mongoose.Schema({

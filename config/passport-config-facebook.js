@@ -7,7 +7,7 @@ const APP_SECRET = 'dea64633191adbbed85a42e1708e0b8e'; // Replace with your Face
 passport.use(new FacebookStrategy({
   clientID: "1700419007381213",
   clientSecret: "dea64633191adbbed85a42e1708e0b8e",
-  callbackURL: 'https://29e2-2a02-8071-5e71-4260-cd25-94db-654d-ca96.ngrok-free.app', // Replace with your callback URL
+  callbackURL: 'https://0369-2a02-8071-5e71-4260-bba-7790-fbde-fbf4.ngrok-free.app', // Replace with your callback URL
   profileFields: ['id', 'displayName', 'emails']
 },
 function(accessToken, refreshToken, profile, done) {

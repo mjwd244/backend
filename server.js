@@ -27,7 +27,7 @@ initializeWebSocketServer(server);
 
 
 app.use('/uploads', cors({
-  origin: 'https://3643-2a02-8071-5e71-4260-a1a0-2a27-125d-1116.ngrok-free.app',
+  origin: 'https://42bc-2a02-8071-5e71-4260-5424-44f9-e366-60c.ngrok-free.app',
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
@@ -84,8 +84,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5000',
-  'https://3643-2a02-8071-5e71-4260-a1a0-2a27-125d-1116.ngrok-free.app',
-  'https://fb18-2a02-8071-5e71-4260-a1a0-2a27-125d-1116.ngrok-free.app'
+  'https://42bc-2a02-8071-5e71-4260-5424-44f9-e366-60c.ngrok-free.app',
+  'https://f962-2a02-8071-5e71-4260-5424-44f9-e366-60c.ngrok-free.app'
 ];
 app.use(cors({
   origin: function (origin, callback) {
@@ -198,7 +198,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://3643-2a02-8071-5e71-4260-a1a0-2a27-125d-1116.ngrok-free.app');
+  res.header('Access-Control-Allow-Origin', 'https://42bc-2a02-8071-5e71-4260-5424-44f9-e366-60c.ngrok-free.app');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');

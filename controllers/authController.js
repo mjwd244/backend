@@ -147,7 +147,7 @@ const verifyEmail = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const { displayName, email, password, photoURL } = req.body;
+    const { displayName, email, password, photoURL,publicKey } = req.body;
   
     
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -157,6 +157,7 @@ const register = async (req, res) => {
       password: hashedPassword,
       photoURL,
       isEmailVerified: false,
+      publicKey
     });
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -175,7 +176,7 @@ const register = async (req, res) => {
     });
 
     console.log('JWT token generated successfully:', token);
-    const verificationUrl = `https://3643-2a02-8071-5e71-4260-a1a0-2a27-125d-1116.ngrok-free.app/verify-email?token=${verificationToken}`;
+    const verificationUrl = `https://42bc-2a02-8071-5e71-4260-5424-44f9-e366-60c.ngrok-free.app/verify-email?token=${verificationToken}`;
     sendVerificationEmail(email, verificationUrl);
 
   

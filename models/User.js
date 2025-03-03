@@ -10,10 +10,12 @@ const friendSchema = new mongoose.Schema({
       return new Date(); // Set to current date when user is created
     }
   },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  publicKey: Object,
 });
 
 const userSchema = new mongoose.Schema({
+  publicKey: Object,
   googleId: {
     type: String,
     required: function() {
@@ -59,7 +61,8 @@ const userSchema = new mongoose.Schema({
     required: true,
     enum: ['local', 'google', 'facebook'],
     default: 'local'
-  }
+  },
+  blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 });
 
 const User = mongoose.model('User', userSchema);

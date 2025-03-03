@@ -14,9 +14,15 @@ const { authenticateJWT }  = require('../middleware/authenticateJWT');
 const fetch = require('node-fetch');
 const Group = require('../models/Group');
 const jwt = require('jsonwebtoken');
+const { updateUserPublicKey } = require('../controllers/userController');
+//const userActionsRouter = require('./userActionsRoutes'); // Import the new routes
+
 
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+
+//router.use('/', userActionsRouter); // Add this line
 
 
 const validateEmail1 = [
@@ -83,6 +89,7 @@ router.post('/groups/userRemovel/:userId/:groupId', removeUserFromGroup)
 router.put('/messages/:messageId/pin', updatemessagePin)
 router.put('/messages/:messageId/unpin', updateMessageUnpin)
 router.put('/messages/:messageId/edit', updateMessageText)
+router.post('/updatePublicKey', updateUserPublicKey);
 
 
 async function verifyGoogleToken(token) {

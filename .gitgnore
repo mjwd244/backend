@@ -1,4 +1,4 @@
-echo "node_modules/
+echo "node_modules/" > .gitignore
 .env
 .DS_Store
 *.log
