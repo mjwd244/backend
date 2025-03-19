@@ -2,12 +2,13 @@ let onlineUsers = {};
 const { Server } = require("socket.io");
 const User = require('./models/User');
 const Conversation = require('./models/Conversation'); // Add this import
+const mongoose = require('mongoose');
 
 const userSocketMap = new Map(); 
 function initializeWebSocketServer(server) {
   const io = new Server(server, {
     cors: {
-      origin: ["https://42bc-2a02-8071-5e71-4260-5424-44f9-e366-60c.ngrok-free.app"],
+      origin: ["https://64d2-2a02-8071-5e71-4260-e139-2951-cc9-7f90.ngrok-free.app"],
       methods: ["GET", "POST"]
     }
   });
@@ -56,12 +57,14 @@ function initializeWebSocketServer(server) {
                   ...newMessage,
                   conversationId
               });
+              io.emit('newUnreadMessage', {
+                senderId: messageData.sender,
+                receiverId: messageData.receiverId
+            });
+             
           }
 
-          io.emit('newUnreadMessage', {
-            senderId: messageData.sender,
-            receiverId: messageData.receiverId
-        });
+       
         
       } catch (error) {
           console.error('Error sending message:', error);
@@ -258,56 +261,48 @@ socket.on('disconnect', async () => {
       }
   });
 
-  socket.on('messageReaction', async ({ messageId, reaction, userId,receiverId, conversationId }) => {
+  socket.on('messageReaction', async ({ messageId, reaction, userId, conversationId }) => {
     try {
-      const conversation = await Conversation.findById(conversationId);
-      if (!conversation) {
-        socket.emit('error', { message: 'Conversation not found' });
-        return;
-      }
-  
-      // Find the message in the conversation
-      const messageIndex = conversation.messages.findIndex(msg => msg._id.toString() === messageId);
-      if (messageIndex === -1) {
-        socket.emit('error', { message: 'Message not found' });
-        return;
-      }
-  
-      // Initialize reactions array if it doesn't exist
-      if (!conversation.messages[messageIndex].reactions) {
-        conversation.messages[messageIndex].reactions = [];
-      }
-  
-      // Add new reaction
-      conversation.messages[messageIndex].reactions.push({
-        userId,
-        reaction,
-        timestamp: new Date()
-      });
-  
-      // Save the updated conversation
-      await conversation.save();
-  
-   
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            socket.emit('error', { message: 'Conversation not found' });
+            return;
+        }
 
-      const receiverSocket = onlineUsers[receiverId];
-    
-      if (receiverSocket) {
-        // Emit only to the specific receiver
-        io.to(receiverSocket).emit('messageReacted', {
-          messageId,
-          reaction,
-          userId
+        // Find the message in the conversation
+        const messageIndex = conversation.messages.findIndex(msg => msg._id.toString() === messageId);
+        if (messageIndex === -1) {
+            socket.emit('error', { message: 'Message not found' });
+            return;
+        }
+
+        // Initialize reactions array if it doesn't exist
+        if (!conversation.messages[messageIndex].reactions) {
+            conversation.messages[messageIndex].reactions = [];
+        }
+
+        // Add new reaction
+        conversation.messages[messageIndex].reactions.push({
+            userId,
+            reaction,
+            timestamp: new Date()
         });
-      }
 
+        // Save the updated conversation
+        await conversation.save();
+
+        // Emit the reaction to all clients in the conversation
+        io.to(conversationId).emit('messageReacted', {
+            messageId,
+            reaction,
+            userId
+        });
 
     } catch (error) {
-      console.error('Error handling message reaction:', error);
-      socket.emit('error', { message: 'Error saving reaction' });
+        console.error('Error handling message reaction:', error);
+        socket.emit('error', { message: 'Error saving reaction' });
     }
-  });
-
+});
 
   });
 }

@@ -176,7 +176,7 @@ const register = async (req, res) => {
     });
 
     console.log('JWT token generated successfully:', token);
-    const verificationUrl = `https://42bc-2a02-8071-5e71-4260-5424-44f9-e366-60c.ngrok-free.app/verify-email?token=${verificationToken}`;
+    const verificationUrl = `https://c3bc-2a02-8071-5e71-4260-e139-2951-cc9-7f90.ngrok-free.app/verify-email?token=${verificationToken}`;
     sendVerificationEmail(email, verificationUrl);
 
   
