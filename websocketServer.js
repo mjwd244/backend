@@ -57,14 +57,14 @@ function initializeWebSocketServer(server) {
                   ...newMessage,
                   conversationId
               });
-              io.emit('newUnreadMessage', {
-                senderId: messageData.sender,
-                receiverId: messageData.receiverId
-            });
+         
              
           }
 
-       
+          io.emit('newUnreadMessage', {
+            senderId: messageData.sender,
+            receiverId: messageData.receiverId
+        });
         
       } catch (error) {
           console.error('Error sending message:', error);
